@@ -31,7 +31,7 @@ class EventReceiverAppSpec extends TestKit(ActorSystem()) with WordSpecLike with
   override def beforeAll {
     EventReceiverApp.configureAndStartConsumers(Array())
     kafkaProducer = KafkaUtil.createKafkaProducer("localhost:9092")
-    kafkaConsumer = KafkaUtil.createKafkaConsumer("localhost:9092", groupId = "group-test")
+    kafkaConsumer = KafkaUtil.createKafkaConsumer("localhost:9092")
     kafkaConsumer.subscribe(java.util.Arrays.asList(KafkaUtil.pageViewEnrichedTopic))
     addCustomer()
   }
@@ -56,7 +56,7 @@ class EventReceiverAppSpec extends TestKit(ActorSystem()) with WordSpecLike with
         """
           |{
           |   "userId": 1,
-          |   "userGender": "MALE",
+          |   "userGender": "FEMALE",
           |   "timestamp": 87387383783,
           |   "page": "/products/123"
           |}
@@ -87,7 +87,7 @@ class EventReceiverAppSpec extends TestKit(ActorSystem()) with WordSpecLike with
     (1 to 2).toStream.takeWhile(_ => !result.isDefined).foreach(i => {
       logger.info(s"===> Starting pooling $i - $kafkaConsumer")
       val records: ConsumerRecords[String, String] = kafkaConsumer.poll(3000)
-      val iterator = records.iterator()
+      val iterator = records.iterator
       logger.info(s"===> Records returned: ${iterator.hasNext}")
       result = if (iterator.hasNext) Some(iterator.next.value) else None
     })
@@ -95,7 +95,7 @@ class EventReceiverAppSpec extends TestKit(ActorSystem()) with WordSpecLike with
   }
 
   def addCustomer() = {
-    val entity = HttpEntity(String.format("{\"name\":\"%s\", \"gender\":\"%s\"}", "John", "MALE"))
+    val entity = HttpEntity(String.format("{\"name\":\"%s\", \"gender\":\"%s\"}", "Mary", "FEMALE"))
       .withContentType(ContentTypes.`application/json`)
     val resp = Http(system)
       .singleRequest(HttpRequest(method = HttpMethods.POST, uri = "http://localhost:8080/customer",

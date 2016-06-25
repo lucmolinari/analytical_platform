@@ -5,7 +5,7 @@ import play.api.libs.json.Json
 /**
   * Responsible for parsing JSON string into objects and vice-versa.
   */
-class EventParser {
+class JsonConverter {
 
   // Needed by play-json
   implicit val pageViewReads = Json.reads[PageView]
@@ -17,7 +17,7 @@ class EventParser {
     * @param rawJson The JSON representation as String.
     * @return An instance of [[PageView]].
     */
-  def parse(rawJson: String): PageView = {
+  def fromJsonToPageView(rawJson: String): PageView = {
     Json.fromJson[PageView](Json.parse(rawJson)).get
   }
 
@@ -27,8 +27,12 @@ class EventParser {
     * @param enrichedPageView The [[EnrichedPageView]] instance to be converted
     * @return The JSON representation as String.
     */
-  def toJson(enrichedPageView: EnrichedPageView): String = {
+  def fromEnrichedPageViewToJson(enrichedPageView: EnrichedPageView): String = {
     Json.toJson(enrichedPageView).toString
+  }
+
+  def extractUserGenderFromJson(json: String): String = {
+    (Json.parse(json) \ "gender").as[String]
   }
 
 }

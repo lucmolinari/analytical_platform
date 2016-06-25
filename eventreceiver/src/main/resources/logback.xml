@@ -6,6 +6,10 @@
         </encoder>
     </appender>
 
+    <logger name="com.lucianomolinari.ap.eventreceiver" level="debug" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
+
     <root level="info">
         <appender-ref ref="STDOUT"/>
     </root>

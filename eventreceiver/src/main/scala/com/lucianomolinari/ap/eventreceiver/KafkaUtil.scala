@@ -23,11 +23,10 @@ object KafkaUtil {
     new KafkaProducer(propsProducer)
   }
 
-  def createKafkaConsumer(kafkaBootstrapServers: String,
-                          groupId: String = "page-view-receiver-group"): KafkaConsumer[String, String] = {
+  def createKafkaConsumer(kafkaBootstrapServers: String): KafkaConsumer[String, String] = {
     val propsConsumer = new Properties()
     propsConsumer.put("bootstrap.servers", kafkaBootstrapServers)
-    propsConsumer.put("group.id", groupId)
+    propsConsumer.put("group.id", "page-view-receiver-group")
     propsConsumer.put("enable.auto.commit", "true")
     propsConsumer.put("auto.commit.interval.ms", "1000")
     propsConsumer.put("session.timeout.ms", "30000")

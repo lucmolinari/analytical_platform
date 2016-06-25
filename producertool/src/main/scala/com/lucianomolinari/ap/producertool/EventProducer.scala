@@ -72,8 +72,8 @@ class EventProducer(config: EventProducerConfig) {
   }
 
   def getJson(): String = {
-    val userId = Random.nextInt(config.maxUsers)
-    val productId = Random.nextInt(config.maxProducts)
+    val userId = Random.nextInt(config.maxUsers) + 1
+    val productId = Random.nextInt(config.maxProducts) + 1
     json.format(userId, System.currentTimeMillis, productId)
   }
 

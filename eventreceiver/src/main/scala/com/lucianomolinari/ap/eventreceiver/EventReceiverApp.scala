@@ -3,9 +3,11 @@ package com.lucianomolinari.ap.eventreceiver
 import java.util.concurrent._
 
 import akka.actor.{ActorSystem, Props}
+import akka.http.scaladsl.Http
 import akka.routing.RoundRobinPool
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.slf4j.LoggerFactory
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object EventReceiverApp {
 
@@ -18,7 +20,7 @@ object EventReceiverApp {
 
   val logger = LoggerFactory.getLogger(getClass)
 
-  val system = ActorSystem("Actor-Receiver")
+  implicit val system = ActorSystem("Actor-Receiver")
 
   private var consumers: List[EventReceiver] = _
   private var kafkaProducer: KafkaProducer[String, String] = _
@@ -42,7 +44,7 @@ object EventReceiverApp {
     consumers.foreach(_.shutdown)
     executor.shutdown
     kafkaProducer.close
-    system.terminate
+    Http().shutdownAllConnectionPools() andThen { case _ => system.terminate() }
   }
 
   def configureAndStartConsumers(args: Array[String]) = {
@@ -54,12 +56,10 @@ object EventReceiverApp {
     logger.info(s"Running $numberOfConsumers Kafka consumer connecting to kafka servers ($kafkaBootstrapServers) " +
       s"and customer app server ($customerApp)")
 
-    val parser = new EventParser
-
     this.kafkaProducer = KafkaUtil.createKafkaProducer(kafkaBootstrapServers)
 
-    val workers = system.actorOf(Props(classOf[EventHandlerActor], parser, kafkaProducer).withRouter(RoundRobinPool(5)),
-      name = "EventHandlerWorkers")
+    val workers = system.actorOf(Props(classOf[EventHandlerActor], customerApp, kafkaProducer)
+      .withRouter(RoundRobinPool(5)).withDispatcher("workers-dispatcher"), name = "EventHandlerWorkers")
 
     this.executor = Executors.newFixedThreadPool(numberOfConsumers)
     this.consumers = List.fill(numberOfConsumers)(new EventReceiver(kafkaBootstrapServers, workers))
